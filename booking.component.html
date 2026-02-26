@@ -1,0 +1,203 @@
+<!-- Page Content -->
+<div class="content-wrapper">
+  <div class="page-title">
+    <h2>{{ editMode() ? '✏️ Update Booking' : '🎫 Book Your Seats' }}</h2>
+    <p>Select your travel date and choose your preferred seats</p>
+  </div>
+
+  @if (errorMessage()) {
+  <div class="error-alert">
+    ⚠️ {{ errorMessage() }}
+    <button (click)="errorMessage.set('')">&times;</button>
+  </div>
+  }
+
+  <!-- Two Column Layout - Fixed Height -->
+  <div class="main-grid">
+    <!-- Left Panel - Form -->
+    <div class="left-panel">
+      <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
+        <!-- Travel Date -->
+        <div class="input-group">
+          <label>📅 Travel Date <span class="req">*</span></label>
+          <input type="date" formControlName="travelDate" [min]="TODAY" class="input-field"
+            [class.error]="bookingForm.get('travelDate')?.invalid && bookingForm.get('travelDate')?.touched" />
+          @if (bookingForm.get('travelDate')?.invalid && bookingForm.get('travelDate')?.touched) {
+          <span class="err-msg">Valid 10-digit number required</span>
+          }
+        </div>
+
+        <!-- Mobile Number -->
+        <div class="input-group">
+          <label>📱 Mobile Number <span class="req">*</span></label>
+          <input type="tel" formControlName="mobileNumber" placeholder="Enter 10-digit number" maxlength="10"
+            class="input-field"
+            [class.error]="bookingForm.get('mobileNumber')?.invalid && bookingForm.get('mobileNumber')?.touched"
+            [readonly]="editMode()" />
+          @if (bookingForm.get('mobileNumber')?.invalid && bookingForm.get('mobileNumber')?.touched) {
+          <span class="err-msg">Valid 10-digit number required</span>
+          }
+        </div>
+
+
+
+        <!-- My Bookings -->
+        <div class="bookings-card">
+          <div class="card-head">
+            <span>📋 My Bookings</span>
+            <button type="button" class="refresh" (click)="refreshBookings()">🔄</button>
+          </div>
+
+          @if (myBookings().length > 0) {
+          <div class="bookings-list">
+            @for (booking of myBookings(); track booking.bookingId) {
+            <div class="booking-row">
+              <div class="booking-info">
+                <span class="bid">{{ booking.bookingId }}</span>
+                <span class="bdate">{{ booking.travelDate | date:'MMM d' }}</span>
+              </div>
+              <div class="bseats">{{ booking.seats.join(', ') }}</div>
+              <div class="bactions">
+                <button type="button" class="bedit" (click)="loadBookingForEdit(booking.bookingId)">✏️</button>
+              </div>
+            </div>
+            }
+          </div>
+          } @else {
+          <div class="no-bookings">No bookings found</div>
+          }
+        </div>
+
+        <!-- Action Buttons - Always Visible -->
+        @if (editMode()) {
+        <button type="button" class="btn-cancel" (click)="resetForm()">
+          ← Cancel Edit
+        </button>
+        }
+
+        <button type="submit" class="btn-submit" [disabled]="bookingForm.invalid || selectedCount() === 0">
+          {{ editMode() ? '✅ Update Booking' : '🎫 Confirm Booking' }}
+          @if (selectedCount() > 0) {
+          <small>{{ selectedCount() }} seat(s) • ₹{{ selectedCount() * 500 }}</small>
+          }
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Panel - Indian RTC Bus Layout -->
+    <div class="right-panel">
+      <div class="bus-card">
+        <!-- Legend -->
+        <div class="legend">
+          <span class="leg-item"><i class="box avail"></i> Available</span>
+          <span class="leg-item"><i class="box select"></i> Selected</span>
+          <span class="leg-item"><i class="box book"></i> Booked</span>
+        </div>
+
+        <!-- Bus Layout - Indian RTC Style -->
+        <div class="bus-body">
+          <!-- Front - Driver & Entrance -->
+          <div class="bus-front">
+            <div class="driver-seat">
+              🛞 Driver
+            </div>
+            <div class="entrance-door">
+              🚪 ENTRANCE
+            </div>
+          </div>
+
+          <!-- Seats Area - Scrollable -->
+          <div class="seats-area">
+            @for (row of rows; track row) {
+            <div class="row">
+              <span class="row-num">{{ row }}</span>
+
+              <!-- Left Side (Window seats) -->
+              <button type="button" [class]="getSeatClasses(getSeatId(row, 1)).join(' ')"
+                [disabled]="isSeatOccupied(getSeatId(row, 1))" (click)="toggleSeat(getSeatId(row, 1))">
+                {{ getSeatId(row, 1) }}
+              </button>
+
+              <button type="button" [class]="getSeatClasses(getSeatId(row, 2)).join(' ')"
+                [disabled]="isSeatOccupied(getSeatId(row, 2))" (click)="toggleSeat(getSeatId(row, 2))">
+                {{ getSeatId(row, 2) }}
+              </button>
+
+              <!-- Aisle -->
+              <div class="aisle"></div>
+
+              <!-- Right Side (Window seats) -->
+              <button type="button" [class]="getSeatClasses(getSeatId(row, 3)).join(' ')"
+                [disabled]="isSeatOccupied(getSeatId(row, 3))" (click)="toggleSeat(getSeatId(row, 3))">
+                {{ getSeatId(row, 3) }}
+              </button>
+
+              <button type="button" [class]="getSeatClasses(getSeatId(row, 4)).join(' ')"
+                [disabled]="isSeatOccupied(getSeatId(row, 4))" (click)="toggleSeat(getSeatId(row, 4))">
+                {{ getSeatId(row, 4) }}
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+          <div class="stat">
+            <b>{{ availableSeatsCount() }}</b>
+            <span>Available</span>
+          </div>
+          <div class="stat">
+            <b>{{ occupiedSeatsCount() }}</b>
+            <span>Booked</span>
+          </div>
+          <div class="stat highlight">
+            <b>{{ selectedCount() }}</b>
+            <span>Selected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+@if (showConfirmation() && confirmation()) {
+<div class="modal-bg" (click)="closeConfirmation()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h3>✅ Booking {{ editMode() ? 'Updated' : 'Confirmed' }}!</h3>
+      <button (click)="closeConfirmation()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="conf-grid">
+        <div class="conf-row hl">
+          <span>Booking ID</span>
+          <b class="bid">{{ confirmation()?.bookingId }}</b>
+        </div>
+        <div class="conf-row">
+          <span>📅 Date</span>
+          <b>{{ confirmation()?.travelDate | date:'mediumDate' }}</b>
+        </div>
+        <div class="conf-row">
+          <span>📱 Mobile</span>
+          <b>{{ confirmation()?.mobileNumber }}</b>
+        </div>
+        <div class="conf-row">
+          <span>🎫 Seats</span>
+          <b class="seats">{{ confirmation()?.seats?.join(', ') }}</b>
+        </div>
+        <div class="conf-row hl">
+          <span>💰 Total</span>
+          <b class="price">₹{{ confirmation()!.seats.length * 500 }}</b>
+        </div>
+      </div>
+      <p class="success">🎉 Your booking is confirmed!</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" (click)="closeConfirmation()">Close</button>
+      <button class="btn-pri" (click)="printTicket()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+}

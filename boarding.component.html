@@ -1,0 +1,168 @@
+<div class="boarding-container">
+  <div class="boarding-card">
+    <div class="boarding-scroll">
+    <h2>📋 Boarding Management</h2>
+
+    <!-- Date Filter -->
+    <div class="filter-section">
+      <div class="form-group">
+        <label for="travelDate">Select Travel Date</label>
+        <input
+          type="date"
+          id="travelDate"
+          [(ngModel)]="selectedDate"
+          (change)="onDateChange()"
+          [min]="TODAY"
+          class="form-control"
+        />
+      </div>
+    </div>
+
+    <!-- Statistics Dashboard -->
+    @if (bookings().length > 0) {
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ totalPassengers() }}</div>
+            <div class="stat-label">Total Passengers</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ boardedPassengers() }}</div>
+            <div class="stat-label">Boarded</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ formatTime(totalBoardingTime()) }}</div>
+            <div class="stat-label">Optimal Time</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🚀</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ getEfficiency() }}%</div>
+            <div class="stat-label">Efficiency</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>Boarding Progress</span>
+          <span class="progress-text">{{ boardedPassengers() }} / {{ totalPassengers() }}</span>
+        </div>
+        <div class="progress-bar">
+          <div 
+            class="progress-fill" 
+            [style.width.%]="boardingProgress()"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Algorithm Explanation -->
+      <div class="algorithm-info">
+        <h3>🧮 Boarding Algorithm Optimization</h3>
+        <div class="algorithm-details">
+          <div class="algorithm-row">
+            <span class="algorithm-label">Strategy:</span>
+            <span class="algorithm-value">Greedy - Farthest to Nearest Seat</span>
+          </div>
+          <div class="algorithm-row">
+            <span class="algorithm-label">Sequential Boarding:</span>
+            <span class="algorithm-value time-bad">{{ formatTime(sequentialBoardingTime()) }}</span>
+          </div>
+          <div class="algorithm-row">
+            <span class="algorithm-label">Optimal Boarding:</span>
+            <span class="algorithm-value time-good">{{ formatTime(totalBoardingTime()) }}</span>
+          </div>
+          <div class="algorithm-row">
+            <span class="algorithm-label">Time Saved:</span>
+            <span class="algorithm-value time-saved">{{ formatTime(timeSaved()) }}</span>
+          </div>
+        </div>
+        <p class="algorithm-explanation">
+          By boarding passengers from the farthest seat to the nearest, we eliminate blocking. 
+          All passengers can settle simultaneously, reducing total time to just 60 seconds!
+        </p>
+      </div>
+
+      <!-- Booking List Table -->
+      <div class="table-section">
+        <h3>Optimal Boarding Sequence</h3>
+        <div class="table-responsive">
+          <table class="booking-table">
+            <thead>
+              <tr>
+                <th>Sequence</th>
+                <th>Booking ID</th>
+                <th>Seats</th>
+                <th>Mobile</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of boardingSequence(); track item.booking.bookingId) {
+                <tr [class.boarded-row]="item.booking.isBoarded">
+                  <td>
+                    <div class="sequence-badge">{{ item.sequence }}</div>
+                  </td>
+                  <td>
+                    <span class="booking-id">{{ item.booking.bookingId }}</span>
+                  </td>
+                  <td>
+                    <div class="seats-list">
+                      @for (seat of item.booking.seats; track seat) {
+                        <span class="seat-badge">{{ seat }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <button 
+                      class="mobile-btn"
+                      (click)="callMobile(item.booking.mobileNumber)"
+                      title="Call {{ item.booking.mobileNumber }}"
+                    >
+                      📞 {{ item.booking.mobileNumber }}
+                    </button>
+                  </td>
+                  <td>
+                    <span [class]="getStatusBadgeClass(item.booking.isBoarded)">
+                      {{ getStatusText(item.booking.isBoarded) }}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      [class]="item.booking.isBoarded ? 'btn-unboard' : 'btn-board'"
+                      (click)="toggleBoarding(item.booking.bookingId, item.booking.isBoarded)"
+                    >
+                      {{ item.booking.isBoarded ? 'Unboard' : 'Mark as Boarded' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No Bookings Found</h3>
+        <p>There are no bookings for {{ selectedDate}}</p>
+        <p class="empty-hint">Select a different date or create a new booking</p>
+      </div>
+    }
+  </div>
+  </div>
+</div>
